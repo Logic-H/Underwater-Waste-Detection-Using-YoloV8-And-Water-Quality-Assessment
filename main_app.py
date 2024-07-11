@@ -1,3 +1,6 @@
+import sys
+from imp import reload
+
 import streamlit as st
 import app
 import app2
@@ -6,81 +9,84 @@ from inference import garbage
 import seaborn as sns
 import matplotlib.pyplot as plt
 
-labels = ['Mask', 'can', 'cellphone', 'electronics', 'gbottle', 'glove', 'metal', 'misc', 'net', 'pbag', 'pbottle',
-          'plastic', 'rod', 'sunglasses', 'tire']
 
+# 定义标签列表
+labels = ['口罩', '罐头', '手机', '电子产品', '玻璃瓶', '手套', '金属', '其他', '网', '塑料袋', 'PET瓶',
+          '塑料', '杆', '太阳镜', '轮胎']
+
+# 主函数
 def main():
-    st.sidebar.title('Navigation')
-    selected_model = st.sidebar.selectbox('', ['Home', 'Underwater Waste Detection Model',
-                                               'Water Quality Assessment Model',
-                                               'Water Potability Test Model', 'Generated Report'])
-    # display appropriate content based on selected model
-    if selected_model == 'Home':
-        st.title('Neural Ocean')
+    # 设置侧边栏标题
+    st.sidebar.title('导航')
+    # 选择模型
+    selected_model = st.sidebar.selectbox('', ['首页', '水下目标检测模型',
+                                               '水质评估模型',
+                                               '水的可饮用性测试模型', '生成报告'])
+    # 根据选择的模型显示相应内容
+    if selected_model == '首页':
+        st.title('深海慧眼')
         st.image('./assets/yacht.jpg')
-        st.success('Neural Ocean is a project that addresses the issue of growing underwater waste in oceans and '
-                   'seas. It offers three solutions: YoloV8 Algorithm-based underwater waste detection, a rule-based '
-                   'classifier for aquatic life habitat assessment, and a Machine Learning model for water '
-                   'classification as fit for drinking or irrigation or not fit. The first model was trained on a '
-                   'dataset of 5000 images, while the second model used chemical properties guidelines from US EPA '
-                   'and WHO. The third model was trained on a dataset with over 6 million rows, providing reliable '
-                   'water classification results.')
-    elif selected_model == 'Underwater Waste Detection Model':
+        st.success('深海慧眼 项目针对水下目标，围绕水下环境复杂多变、声学图像纹理特征模糊、数据集缺少等问题，提出基于深度学习的方法，采用视觉传感器，利用水下光学图像分辨率较高、对小尺寸物体检测优势，通过YOLO-World等新型神经网络模型融合注意力机制，构建由光学图像处理模块、神经网络决策模块、传感器及其控制模块、物联网信息协同模块四大模块组成的“深海慧眼”水下目标视觉识别系统，用以改善目前人工水下目标捕捞高成本、低效率、低安全性，人工操纵的水下潜水器无法进行大规模水下目标清除，已有的水下机器人普遍呈现检测精度差的现实情况，以解决水下目标监测定位难、海洋生态评估改善难等社会热点问题')
+    elif selected_model == '水下目标检测模型':
         app.app()
-    elif selected_model == 'Water Quality Assessment Model':
+    elif selected_model == '水质评估模型':
         rbc.rbc()
-    elif selected_model == 'Water Potability Test Model':
+    elif selected_model == '水的可饮用性测试模型':
         app2.app2()
-    elif selected_model == 'Generated Report':
-        st.header('Frequency of all the waste labels')
+    elif selected_model == '生成报告':
+        plt.rcParams['font.sans-serif'] = ['SimHei']  # 用来正常显示中文标签
+        plt.rcParams['axes.unicode_minus'] = False  # 用来正常显示负号
+        # 显示所有目标标签的频率
+        st.header('所有物体标签的频率')
         occurrences = [garbage.count(labels[i]) for i in range(len(labels))]
         sns.barplot(y=labels, x=occurrences)
-        plt.xlabel("Occurrences")
-        plt.ylabel("Labels")
-        plt.title("Histogram of Occurrences")
+        plt.xlabel("出现次数")
+        plt.ylabel("标签")
+        plt.title("出现次数的直方图")
         st.pyplot()
 
-
-        st.header('Water Quality for Aquatic Life Habitat')
+        # 水质对水生生物栖息地的影响
+        st.header('水生生物栖息地的水质')
         quality_aquatic = rbc.quality_aquatic
         counts = [quality_aquatic.count(0), quality_aquatic.count(1)]
-        if len(quality_aquatic) ==  0:
-            st.error("Please run some inference on water quality for aquatic life habitat")
+        if len(quality_aquatic) == 0:
+            st.error("请先对水生生物栖息地的水质进行一些推理")
         else:
             ans = max(set(quality_aquatic), key=quality_aquatic.count)
-            labels_h = ['Habitual', 'Not Habitual']
+            labels_h = ['适宜', '不适宜']
             habitual = labels_h[ans]
             colors = ['#cfaca4', '#623337']
             sns.set_style("whitegrid")
             plt.figure(figsize=(6, 6))
             plt.pie(counts, labels=labels_h, colors=colors, autopct='%1.1f%%', startangle=90)
-            plt.title('Proportions Of Water Quality')
+            plt.title('水质比例')
             st.pyplot()
 
-
-        st.header('Water Quality for Potability')
+        # 水的可饮用性质量
+        st.header('水的可饮用性质量')
         data = app2.quality
         counts = [data.count(0), data.count(1)]
         if len(data) == 0:
-            st.error("Please run some inference on water quality assessment")
+            st.error("请先对水质进行一些推理")
         else:
             ans = max(set(data), key=data.count)
-            labels_wqa = ['Fit for use', 'Polluted']
+            labels_wqa = ['适合使用', '污染']
             qwa = labels_wqa[ans]
             colors = ['#1f77b4', '#ff7f0e']
             sns.set_style("whitegrid")
             plt.figure(figsize=(6, 6))
             plt.pie(counts, labels=labels_wqa, colors=colors, autopct='%1.1f%%', startangle=90)
-            plt.title('Proportions Of Water Quality')
+            plt.title('水质比例')
             st.pyplot()
-            st.header("Conclusion: ")
+            st.header("结论: ")
             st.success(
-                f'In the recent images, the most seen type of waste is'
-                f' {labels[occurrences.index(max(occurrences))]} that has been seen {max(occurrences)} times.'
-                f' Also, the water quality has been analyzed and the water has been labelled as {habitual} for aquatic life'
-                f' and {qwa} by humans.'
+                f'在最近的图片中，最常看到的物体类型是'
+                f' {labels[occurrences.index(max(occurrences))]}，出现了 {max(occurrences)} 次。'
+                f' 此外，水的水质已经分析，水被标记为对水生生物{habitual}'
+                f' 和对人类{qwa}。'
             )
     else:
-        st.warning('Please select a model from the sidebar.')
+        st.warning('请从侧边栏选择一个模型。')
 
+# 运行主函数
 main()

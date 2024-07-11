@@ -1,9 +1,10 @@
 import streamlit as st
 from pycaret.classification import *
 import pandas as pd
-test_df = pd.read_csv('C:/Users/Acer/Documents/Neural_Ocean/Notebooks_PyFiles/test_data/test_df')
+# 读取测试数据
+test_df = pd.read_csv('C:/Users/22596/Documents/AI/Underwater-Waste-Detection-Using-YoloV8-And-Water-Quality-Assessment/test_data/test_df')
 
-# Define the features and their types
+# 定义特征及其类型
 features = {
     'pH': float,
     'Iron': float,
@@ -22,21 +23,21 @@ features = {
     'Total Dissolved Solids': float,
 }
 
-# Define the target variable
+# 定义目标变量
 target_variable = 'Target'
 
-# Define the color options
-color_options = ['Colorless', 'Faint Yellow', 'Light Yellow', 'Near Colorless', 'Yellow', 'NaN']
+# 定义颜色选项
+color_options = ['无色', '淡黄色', '浅黄色', '近无色', '黄色', 'NaN']
 
 quality = []
-# Create a Streamlit app
+# 创建 Streamlit 应用程序
 def app2():
-    st.title('Water Potability Test Model')
-    # Load the pretrained model
+    st.title('水的可饮用性测试模型')
+    # 加载预训练模型
     model = load_model(
-        'C:/Users/Acer/Documents/Neural_Ocean/Notebooks_PyFiles/models/Water_Quality_Assessment'
+        'C:/Users/22596/Documents/AI/Underwater-Waste-Detection-Using-YoloV8-And-Water-Quality-Assessment/models/Water_Potability'
         '/xgboost_without_source_month')
-    # Create input widgets for each feature
+    # 为每个特征创建输入控件
     inputs = {}
     col1, col2, col3 = st.columns(3)
     for i, feature in enumerate(features.items()):
@@ -55,26 +56,26 @@ def app2():
                 inputs[feature[0]] = st.number_input(f'{feature[0]}', value=0.0, step=0.1, format='%.1f',
                                                      key=feature[0])
 
-    # Add two buttons aligned in the center
+    # 添加两个居中的按钮
     col1, col2 = st.columns([1,2])
     with col1:
-        if st.button('Predict'):
+        if st.button('预测'):
             data = pd.DataFrame(inputs, index=range(0, 1), columns=inputs.keys())
             target = predict_model(model, data=data)
             quality.append(target['prediction_label'][0])
             if target['prediction_label'][0] == 0:
-                st.success('The Water is fit for drinking and also for irrigation purpose')
+                st.success('水适合饮用，也适合灌溉')
             else:
-                st.error('The Water is not fit for drinking or for irrigation purpose')
+                st.error('水不适合饮用或灌溉')
 
     with col2:
-        if st.button('Random Inputs Predict'):
+        if st.button('随机输入预测'):
             data = test_df.sample(n=1)
             data.drop(['Target'], axis=1, inplace=True)
             st.write(data)
             target = predict_model(model, data=data)
             quality.append(target['prediction_label'][data.index[0]])
-            if target['prediction_label'][data.index[0]]== 0:
-                st.success('The Water is fit for drinking and also for irrigation purpose')
+            if target['prediction_label'][data.index[0]] == 0:
+                st.success('水适合饮用，也适合灌溉')
             else:
-                st.error('The Water is not fit for drinking or for irrigation purpose')
+                st.error('水不适合饮用或灌溉')
